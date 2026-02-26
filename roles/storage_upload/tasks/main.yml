@@ -3,6 +3,13 @@
   delegate_to: "{{ aap_server_hostname }}"
   become: no
   block:
+    - name: Copy backup from EE container to AAP Host
+      ansible.builtin.copy:
+        src: "{{ local_temp_dir }}/{{ inventory_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
+        dest: "{{ local_temp_dir }}/{{ inventory_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
+      delegate_to: "{{ aap_server_name }}"
+      # This moves the file from the container's memory to the host's physical disk
+
     - name: Upload sudoers archive to Azure Blob (CLI)
       ansible.builtin.shell: >
         az storage blob upload
@@ -13,6 +20,7 @@
         --name "{{ inventory_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
         --auth-mode key
         --overwrite
+      delegate_to: "{{ aap_server_name }}"
       register: upload_output
 
     - name: Show Azure CLI Result for Debugging
