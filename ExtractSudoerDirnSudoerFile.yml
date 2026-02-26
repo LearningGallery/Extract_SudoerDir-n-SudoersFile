@@ -1,0 +1,5 @@
+---
+- name: Execute sudoers backup to Azure
+  hosts: rhel_servers
+  roles:
+    - backup_sudoers
