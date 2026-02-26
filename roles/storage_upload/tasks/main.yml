@@ -1,6 +1,6 @@
 ---
-- name: Upload and Clean Up
-  delegate_to: localhost  # In AAP, localhost is the /runner/ context
+- name: Upload and Clean Up Block
+  delegate_to: localhost
   become: no
   block:
     - name: Upload sudoers archive to Azure Blob (CLI)
@@ -13,9 +13,11 @@
         --name "{{ inventory_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
         --auth-mode key
         --overwrite
-      register: upload_result
-      # We do NOT use run_once: true here because each host has its own 
-      # unique sudoers archive that needs to be uploaded.
+      register: upload_output
+
+    - name: Show Azure CLI Result for Debugging
+      ansible.builtin.debug:
+        var: upload_output.stdout_lines
 
     - name: Clean up local temporary file from AAP server
       ansible.builtin.file:
@@ -23,6 +25,6 @@
         state: absent
 
   rescue:
-    - name: Fail with custom message if upload fails
+    - name: Fail with detailed error
       ansible.builtin.fail:
-        msg: "Failed to upload sudoers backup for {{ inventory_hostname }} to Azure. Check CLI output: {{ upload_result.stderr | default('No error captured') }}"
+        msg: "Upload failed! Error: {{ upload_output.stderr }}"

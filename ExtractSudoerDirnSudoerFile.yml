@@ -1,6 +1,12 @@
 ---
 - name: Archive and Upload Sudoers to Azure
   hosts: all
+  gather_facts: yes
+  pre_tasks:
+    - name: Set global timestamp for all roles
+      set_fact:
+        backup_timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.time | replace(':', '-') }}"
+      run_once: yes
   roles:
     - role: sudoers_archive
     - role: storage_upload
