@@ -1,5 +1,6 @@
 ---
-- name: Execute sudoers backup to Azure
+- name: Archive and Upload Sudoers to Azure
   hosts: rhel_servers
   roles:
-    - backup_sudoers
+    - role: sudoers_archive
+    - role: storage_upload

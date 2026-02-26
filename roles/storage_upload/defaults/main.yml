@@ -1,3 +1,2 @@
 ---
-# Local Temp Directory on Control Node
 local_temp_dir: "/tmp/ansible_sudoers_backups"

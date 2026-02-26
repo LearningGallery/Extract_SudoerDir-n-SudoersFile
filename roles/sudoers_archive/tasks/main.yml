@@ -1,0 +1,35 @@
+---
+- name: Ensure local temporary directory exists on AAP control node
+  ansible.builtin.file:
+    path: "{{ local_temp_dir }}"
+    state: directory
+    mode: '0700'
+  delegate_to: localhost
+  run_once: yes
+  become: no
+
+- name: Set timestamp fact for file naming
+  ansible.builtin.set_fact:
+    backup_timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.time | replace(':', '-') }}"
+
+- name: Archive sudoers file and sudoers.d directory on RHEL machine
+  ansible.builtin.archive:
+    path:
+      - /etc/sudoers
+      - /etc/sudoers.d/
+    dest: "/tmp/{{ inventory_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
+    format: gz
+  become: yes
+
+- name: Fetch sudoers archive to AAP server
+  ansible.builtin.fetch:
+    src: "/tmp/{{ inventory_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
+    dest: "{{ local_temp_dir }}/"
+    flat: yes
+  become: yes
+
+- name: Clean up remote archive on RHEL machine
+  ansible.builtin.file:
+    path: "/tmp/{{ inventory_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
+    state: absent
+  become: yes

@@ -1,0 +1,6 @@
+---
+# Azure Storage Configuration
+az_resource_group: "rg-ncssdp-abutalha"
+az_storage_account: "learninggallery"
+az_storage_key: "{{ lookup('env', 'AZURE_STORAGE_KEY') }}" # Passed via AAP Credential
+az_container: "rotation-reports"

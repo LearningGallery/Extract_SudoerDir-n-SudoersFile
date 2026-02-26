@@ -1,5 +1,0 @@
----
-# Azure Configuration
-az_resource_group: "myResourceGroup"
-az_storage_account: "mystorageaccountname"
-az_container: "sudoers-backups"
