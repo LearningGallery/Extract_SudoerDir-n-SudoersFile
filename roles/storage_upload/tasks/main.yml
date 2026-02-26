@@ -1,6 +1,6 @@
 ---
 - name: Upload and Clean Up Block
-  delegate_to: localhost
+  delegate_to: "{{ aap_server_hostname }}"
   become: no
   block:
     - name: Upload sudoers archive to Azure Blob (CLI)
