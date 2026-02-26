@@ -2,8 +2,8 @@
 - name: Upload sudoers archive to Azure Blob Storage
   azure.azcollection.azure_rm_storageblob:
     resource_group: "{{ az_resource_group }}"
-    storage_account_name: "{{ az_storage_account }}"
-    secret_key: "{{ az_storage_key }}"
+    storage_account_name: "{{ storage_account_name }}"
+    secret: "{{ storage_account_key }}"
     container: "{{ az_container }}"
     blob: "{{ inventory_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
     src: "{{ local_temp_dir }}/{{ inventory_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
