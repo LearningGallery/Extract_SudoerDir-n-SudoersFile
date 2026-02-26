@@ -1,18 +1,28 @@
 ---
-- name: Upload sudoers archive to Azure Blob Storage
-  azure.azcollection.azure_rm_storageblob:
-    resource_group: "{{ az_resource_group }}"
-    storage_account_name: "{{ storage_account_name }}"
-    secret: "{{ storage_account_key }}"
-    container: "{{ az_container }}"
-    blob: "{{ inventory_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
-    src: "{{ local_temp_dir }}/{{ inventory_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
-  delegate_to: localhost
+- name: Upload and Clean Up
+  delegate_to: localhost  # In AAP, localhost is the /runner/ context
   become: no
+  block:
+    - name: Upload sudoers archive to Azure Blob (CLI)
+      ansible.builtin.shell: >
+        az storage blob upload
+        --account-name "{{ storage_account_name }}"
+        --account-key "{{ storage_account_key }}"
+        --container-name "{{ az_container }}"
+        --file "{{ local_temp_dir }}/{{ inventory_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
+        --name "{{ inventory_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
+        --auth-mode key
+        --overwrite
+      register: upload_result
+      # We do NOT use run_once: true here because each host has its own 
+      # unique sudoers archive that needs to be uploaded.
 
-- name: Clean up local temporary file from AAP server
-  ansible.builtin.file:
-    path: "{{ local_temp_dir }}/{{ inventory_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
-    state: absent
-  delegate_to: localhost
-  become: no
+    - name: Clean up local temporary file from AAP server
+      ansible.builtin.file:
+        path: "{{ local_temp_dir }}/{{ inventory_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
+        state: absent
+
+  rescue:
+    - name: Fail with custom message if upload fails
+      ansible.builtin.fail:
+        msg: "Failed to upload sudoers backup for {{ inventory_hostname }} to Azure. Check CLI output: {{ upload_result.stderr | default('No error captured') }}"
