@@ -6,11 +6,6 @@
     mode: '0700'
   delegate_to: localhost
   run_once: yes
-  become: no
-
-- name: Set timestamp fact for file naming
-  ansible.builtin.set_fact:
-    backup_timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.time | replace(':', '-') }}"
 
 - name: Archive sudoers file and sudoers.d directory on RHEL machine
   ansible.builtin.archive:
