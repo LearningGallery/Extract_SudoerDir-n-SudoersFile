@@ -1,3 +1,5 @@
 ---
 # Azure Storage Configuration
 az_container: "rotation-reports"
+aap_controller_host: "aap-server.learninggallery.com" 
+local_temp_dir: "/tmp/ansible_sudoers_backups"
