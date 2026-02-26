@@ -1,6 +1,6 @@
 ---
 - name: Archive and Upload Sudoers to Azure
-  hosts: rhel_servers
+  hosts: all
   roles:
     - role: sudoers_archive
     - role: storage_upload
