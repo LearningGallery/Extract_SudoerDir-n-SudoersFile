@@ -41,8 +41,8 @@
       community.general.mail:
         host: "{{ smtp_host }}"
         port: "{{ smtp_port | default(587) }}"
-        username: "{{ smtp_username | default(omit) }}"
-        password: "{{ smtp_password | default(omit) }}"
+        username: "{{ smtp_user | default(omit) }}"
+        password: "{{ smtp_pass | default(omit) }}"
         sender: "{{ smtp_sender | default('ansible-automation@yourdomain.com') }}"
         to: "{{ email_recipient }}"
         subject: "Sudoers Backup & Azure Upload Report - {{ backup_timestamp }}"
