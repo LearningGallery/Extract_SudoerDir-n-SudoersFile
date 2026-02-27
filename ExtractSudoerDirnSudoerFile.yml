@@ -49,5 +49,6 @@
         body: "The Sudoers archive and Azure upload workflow has finished executing. Please find the attached HTML tracker for the success/failure status of each node."
         attach:
           - "/tmp/sudoers_tracker_{{ backup_timestamp }}.html"
+        secure: starttls
       delegate_to: "{{ aap_server_hostname }}"
       run_once: true
