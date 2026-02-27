@@ -43,7 +43,7 @@
         port: "{{ smtp_port | default(587) }}"
         username: "{{ smtp_user | default(omit) }}"
         password: "{{ smtp_pass | default(omit) }}"
-        sender: "{{ smtp_sender | default('ansible-automation@yourdomain.com') }}"
+        sender: "{{ smtp_sender | default('abutalha3005@gmail.com') }}"
         to: "{{ email_recipient }}"
         subject: "Sudoers Backup & Azure Upload Report - {{ backup_timestamp }}"
         body: "The Sudoers archive and Azure upload workflow has finished executing. Please find the attached HTML tracker for the success/failure status of each node."

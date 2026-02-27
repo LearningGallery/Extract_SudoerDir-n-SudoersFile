@@ -9,7 +9,3 @@ smtp_sender: "abutalha3005@gmail.com"
 email_recipient: "abutalha@amityonline.com"
 smtp_host: "smtp.gmail.com"
 smtp_port: 587
-
-# FIXED: Renamed to match the playbook and removed spaces from the password
-smtp_username: "abutalha3005@gmail.com"
-smtp_password: "abcdefghijklmnop"
