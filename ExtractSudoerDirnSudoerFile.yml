@@ -52,3 +52,9 @@
         secure: starttls
       delegate_to: "{{ aap_server_hostname }}"
       run_once: true
+
+    - name: Clean up HTML Tracker Report on AAP Server
+      ansible.builtin.file:
+        path: "/tmp/sudoers_tracker_{{ backup_timestamp }}.html"
+        state: absent
+      become: yes
