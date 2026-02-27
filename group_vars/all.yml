@@ -3,3 +3,10 @@
 az_container: "rotation-reports"
 aap_server_hostname: "aap-controller.learninggallery.com" 
 local_temp_dir: "/tmp/ansible_sudoers_backups"
+storage_account_name: "learninggallery"
+smtp_sender: "abutalha3005@gmail.com"
+smtp_user: "abutalha3005@gmail.com"
+smtp_pass: "abcd efgh ijkl mnop"
+email_recipient: "abutalha@amityonline.com"
+smtp_host: "smtp.gmail.com"
+smtp_port: 587

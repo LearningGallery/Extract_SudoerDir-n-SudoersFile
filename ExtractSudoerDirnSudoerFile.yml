@@ -1,12 +1,53 @@
 ---
 - name: Archive and Upload Sudoers to Azure
   hosts: all
-  gather_facts: yes
+  gather_facts: false 
   pre_tasks:
+    # ------------------------------------------------------------------
+    # RESILIENCE: Retry SSH connection for up to 5 minutes
+    # ------------------------------------------------------------------
+    - name: Wait for host to be reachable (Handles Latency)
+      ansible.builtin.wait_for_connection:
+        timeout: 120  # Will retry connecting for up to 5 minutes
+        sleep: 10     # Waits 10 seconds between each retry attempt
+        
+    # Now that we know the host is awake and responding, gather facts
+    - name: Gather facts explicitly
+      ansible.builtin.setup:
+
     - name: Set global timestamp for all roles
       set_fact:
         backup_timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.time | replace(':', '-') }}"
       run_once: yes
+    
+    - name: Set dynamic filename using OS Hostname
+      ansible.builtin.set_fact:
+        # Uses the actual machine hostname (e.g., ansiblenode1) instead of the IP
+        backup_filename: "{{ ansible_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
+
   roles:
     - role: sudoers_archive
     - role: storage_upload
+
+  post_tasks:
+    - name: Generate HTML Tracker Sheet
+      ansible.builtin.template:
+        src: tracker_report.html.j2
+        dest: "/tmp/sudoers_tracker_{{ backup_timestamp }}.html"
+      delegate_to: "{{ aap_server_hostname }}"
+      run_once: true
+
+    - name: Send HTML Tracker Report via Email
+      community.general.mail:
+        host: "{{ smtp_host }}"
+        port: "{{ smtp_port | default(587) }}"
+        username: "{{ smtp_username | default(omit) }}"
+        password: "{{ smtp_password | default(omit) }}"
+        sender: "{{ smtp_sender | default('ansible-automation@yourdomain.com') }}"
+        to: "{{ email_recipient }}"
+        subject: "Sudoers Backup & Azure Upload Report - {{ backup_timestamp }}"
+        body: "The Sudoers archive and Azure upload workflow has finished executing. Please find the attached HTML tracker for the success/failure status of each node."
+        attach:
+          - "/tmp/sudoers_tracker_{{ backup_timestamp }}.html"
+      delegate_to: "{{ aap_server_hostname }}"
+      run_once: true

@@ -12,19 +12,19 @@
     path:
       - /etc/sudoers
       - /etc/sudoers.d/
-    dest: "/tmp/{{ inventory_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
+    dest: "/tmp/{{ backup_filename }}"
     format: gz
   become: yes
 
 - name: Fetch sudoers archive to AAP server
   ansible.builtin.fetch:
-    src: "/tmp/{{ inventory_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
+    src: "/tmp/{{ backup_filename }}"
     dest: "{{ local_temp_dir }}/"
     flat: yes
   become: yes
 
 - name: Clean up remote archive on RHEL machine
   ansible.builtin.file:
-    path: "/tmp/{{ inventory_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
+    path: "/tmp/{{ backup_filename }}"
     state: absent
   become: yes

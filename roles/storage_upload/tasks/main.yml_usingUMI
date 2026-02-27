@@ -1,0 +1,71 @@
+---
+- name: Managed Identity Upload and Clean Up
+  delegate_to: "{{ aap_server_hostname }}"
+  block:
+    # ------------------------------------------------------------------
+    # STEP 1: Sync file from EE Container to AAP Host Disk
+    # ------------------------------------------------------------------
+    - name: Ensure backup directory exists on AAP host
+      ansible.builtin.file:
+        path: "{{ local_temp_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Copy backup from EE container to AAP Host disk
+      ansible.builtin.copy:
+        src: "{{ local_temp_dir }}/{{ backup_filename }}"
+        dest: "{{ local_temp_dir }}/{{ backup_filename }}"
+        mode: '0644'
+
+    # ------------------------------------------------------------------
+    # STEP 2: Get MSI Token specifically for Storage
+    # ------------------------------------------------------------------
+    - name: Get MSI Access Token for Storage
+      ansible.builtin.uri:
+        url: "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://storage.azure.com/&client_id={{ umi_client_id }}"
+        headers:
+          Metadata: "true"
+        return_content: yes
+        method: GET
+      register: storage_token_output
+
+    # ------------------------------------------------------------------
+    # STEP 3: Upload File using REST API
+    # ------------------------------------------------------------------
+    - name: Upload backup to Azure Blob (REST API)
+      ansible.builtin.uri:
+        url: "https://{{ storage_account_name }}.blob.core.windows.net/{{ az_container }}/{{ backup_filename }}"
+        method: PUT
+        headers:
+          Authorization: "Bearer {{ storage_token_output.json.access_token }}"
+          x-ms-blob-type: "BlockBlob"
+          x-ms-version: "2020-04-08"
+        src: "{{ local_temp_dir }}/{{ backup_filename }}"
+        status_code: [201]
+        timeout: 120
+      register: azure_upload_output
+      retries: 3        # If the upload fails, try 3 more times
+      delay: 15         # Wait 15 seconds between API retries
+      until: azure_upload_output.status == 201
+
+    # ------------------------------------------------------------------
+    # STEP 4: Clean up local AAP host disk
+    # ------------------------------------------------------------------
+    - name: Clean up local temporary file from AAP host
+      ansible.builtin.file:
+        path: "{{ local_temp_dir }}/{{ backup_filename }}"
+        state: absent
+
+    # --- RECORD SUCCESS ---
+    - name: Record Success
+      ansible.builtin.set_fact:
+        upload_status: "Success"
+        error_message: "-"
+
+  rescue:
+    # --- RECORD FAILURE AND CAPTURE ERROR MSG ---
+    - name: Record Failure
+      ansible.builtin.set_fact:
+        upload_status: "Failed"
+        # Captures the specific HTTP error from the URI module, or defaults to a general error
+        error_message: "{{ azure_upload_output.msg | default(storage_token_output.msg | default('Failed during file copy or token retrieval')) }}"

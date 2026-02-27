@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sudoers Archive & Upload Report</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 20px; color: #333; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h2 { color: #2c3e50; margin-bottom: 5px; }
+        .header p { color: #7f8c8d; font-size: 0.9em; margin-top: 0; }
+        table { border-collapse: collapse; width: 95%; margin: 0 auto; background-color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #34495e; color: white; font-weight: 600; text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.5px; }
+        tr:hover { background-color: #f1f1f1; }
+        tr:last-child td { border-bottom: none; }
+        .status-success { color: #27ae60; font-weight: bold; background-color: #e8f8f5; padding: 4px 8px; border-radius: 4px; display: inline-block;}
+        .status-failed { color: #e74c3c; font-weight: bold; background-color: #fadbd8; padding: 4px 8px; border-radius: 4px; display: inline-block;}
+        .error-text { color: #c0392b; font-size: 0.9em; }
+        .success-text { color: #7f8c8d; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>Sudoers Backup & Upload Execution Tracker</h2>
+        <p>Execution Timestamp: {{ backup_timestamp }}</p>
+    </div>
+
+    <table>
+        <tr>
+            <th>OS Hostname</th>
+            <th>IP Address</th>
+            <th>Archive Filename</th>
+            <th>Status</th>
+            <th>Error Message / Details</th>
+        </tr>
+        
+        {% for host in ansible_play_hosts_all %}
+            {# Retrieve variables with safe defaults in case a node was unreachable early on #}
+            {% set os_hostname = hostvars[host]['ansible_hostname'] | default('Unknown (Unreachable)') %}
+            {% set ip_address = hostvars[host]['inventory_hostname'] %}
+            {% set filename = hostvars[host]['backup_filename'] | default('N/A') %}
+            {% set status = hostvars[host]['upload_status'] | default('Failed') %}
+            {% set err_msg = hostvars[host]['error_message'] | default('Execution halted before upload block or node unreachable.') %}
+            
+        <tr>
+            <td><strong>{{ os_hostname }}</strong></td>
+            <td>{{ ip_address }}</td>
+            <td>{{ filename }}</td>
+            <td>
+                <span class="status-{{ status | lower }}">{{ status }}</span>
+            </td>
+            <td class="{% if status == 'Success' %}success-text{% else %}error-text{% endif %}">
+                {{ err_msg }}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</body>
+</html>

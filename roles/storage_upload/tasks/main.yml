@@ -1,8 +1,11 @@
 ---
-- name: Upload and Clean Up Block
+- name: CLI Upload and Clean Up Block
   delegate_to: "{{ aap_server_hostname }}"
   become: no
   block:
+    # ------------------------------------------------------------------
+    # STEP 1: Sync file from EE Container to AAP Host Disk
+    # ------------------------------------------------------------------
     - name: Ensure backup directory exists on AAP host OS
       ansible.builtin.file:
         path: "{{ local_temp_dir }}"
@@ -11,35 +14,54 @@
 
     - name: Copy backup from EE container to AAP Host
       ansible.builtin.copy:
-        src: "{{ local_temp_dir }}/{{ inventory_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
-        dest: "{{ local_temp_dir }}/{{ inventory_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
-      #delegate_to: "{{ aap_server_hostname }}"
-      # This moves the file from the container's memory to the host's physical disk
+        src: "{{ local_temp_dir }}/{{ backup_filename }}"
+        dest: "{{ local_temp_dir }}/{{ backup_filename }}"
+        mode: '0644'
 
+    # ------------------------------------------------------------------
+    # STEP 2: Upload File using Azure CLI
+    # ------------------------------------------------------------------
     - name: Upload sudoers archive to Azure Blob (CLI)
       ansible.builtin.shell: >
         az storage blob upload
         --account-name "{{ storage_account_name }}"
         --account-key "{{ storage_account_key }}"
         --container-name "{{ az_container }}"
-        --file "{{ local_temp_dir }}/{{ inventory_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
-        --name "{{ inventory_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
+        --file "{{ local_temp_dir }}/{{ backup_filename }}"
+        --name "{{ backup_filename }}"
         --auth-mode key
         --overwrite
-      # delegate_to: "{{ aap_server_hostname }}"
       register: upload_output
+      retries: 3                  # Retry logic for network latency
+      delay: 15
+      until: upload_output.rc == 0
 
     - name: Show Azure CLI Result for Debugging
       ansible.builtin.debug:
         var: upload_output.stdout_lines
 
+    # ------------------------------------------------------------------
+    # STEP 3: Clean up local AAP host disk
+    # ------------------------------------------------------------------
     - name: Clean up local temporary file from AAP server
       ansible.builtin.file:
-        path: "{{ local_temp_dir }}/{{ inventory_hostname }}_{{ backup_timestamp }}_sudoers_backup.tar.gz"
+        path: "{{ local_temp_dir }}/{{ backup_filename }}"
         state: absent
-      # delegate_to: "{{ aap_server_hostname }}"
+
+    # ------------------------------------------------------------------
+    # STEP 4: Record Success for HTML Tracker
+    # ------------------------------------------------------------------
+    - name: Record Success
+      ansible.builtin.set_fact:
+        upload_status: "Success"
+        error_message: "-"
 
   rescue:
-    - name: Fail with detailed error
-      ansible.builtin.fail:
-        msg: "Upload failed! Error: {{ upload_output.stderr }}"
+    # ------------------------------------------------------------------
+    # STEP 5: Record Failure for HTML Tracker
+    # ------------------------------------------------------------------
+    - name: Record Failure
+      ansible.builtin.set_fact:
+        upload_status: "Failed"
+        # Captures the specific CLI stderr, or a fallback message if it failed before the CLI step
+        error_message: "{{ upload_output.stderr | default('Failed during file copy or CLI execution') }}"
