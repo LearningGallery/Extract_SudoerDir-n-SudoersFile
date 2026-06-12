@@ -281,13 +281,6 @@ echo "✅ Check email for HTML tracker report"
 
 ```
 
-### Step 10: Next Steps
-
-- Review **[Detailed Architecture Guide](docs/02-ARCHITECTURE.md)**  
-- Explore **[Role Reference](docs/05-ROLE-REFERENCE.md)**  
-- Set up **[Scheduling with Cron](docs/13-RUNBOOK.md#scheduling-automated-backups)**  
-- Implement **[Security Best Practices](docs/11-SECURITY-HARDENING.md)**  
-
 ---
 
 
