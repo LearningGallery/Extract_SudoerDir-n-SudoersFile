@@ -1,5 +1,7 @@
 # 🔐 Sudoers Archive \& Azure Upload Automation
 
+[![LinkedIn](https://img.shields.io/badge/Connect%20with%20me%20on-LinkedIn-blue.svg)](https://www.linkedin.com/in/Im-Abutalha/)
+[![GitHub](https://img.shields.io/github/stars/LearningGallery.svg?style=social)](https://github.com/LearningGallery)
 ![Ansible](https://img.shields.io/badge/Ansible-2.9+-red?style=flat-square\&logo=ansible)
 ![Python](https://img.shields.io/badge/Python-3.8+-blue?style=flat-square\&logo=python)
 ![Azure](https://img.shields.io/badge/Azure-Cloud-0078D4?style=flat-square\&logo=microsoft-azure)
